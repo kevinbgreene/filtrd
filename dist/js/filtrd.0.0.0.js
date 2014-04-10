@@ -3914,7 +3914,7 @@
         };
     }
     "undefined" == typeof global.injekter && (global.injekter = Injekter());
-}(window, window.jQuery), injekter.run([ "eventHub", "injekter.config", "FiltrdTable", "FiltrdMenu", "filtrdRules", "FiltrdStack" ], function(eventHub, config, FiltrdTable, FiltrdMenu, filtrdRules, FiltrdStack) {
+}(window, window.jQuery), injekter.run([ "eventHub", "injekter.config", "FiltrdTable", "FiltrdMenu", "filtrdRules", "FiltrdStack", "FiltrdPagination" ], function(eventHub, config, FiltrdTable, FiltrdMenu, filtrdRules, FiltrdStack, FiltrdPagination) {
     "use strict";
     function divideFiltersIntoCollections(filtersToDivide) {
         filtersToDivide.each(function(filter) {
@@ -3925,24 +3925,25 @@
         });
     }
     config.set("category-name", "Test"), config.set("rules-url", "json/rules.js");
-    var filterRules = null, filterMenu = null, filterTable = null, filterCollections = {}, appliedSupers = new FiltrdStack(), filters = new FiltrdStack(), appliedFilters = new FiltrdStack(), rows = (new FiltrdStack(), 
+    var filterRules = null, filterMenu = null, filterPagination = null, filterTable = null, filterCollections = {}, appliedSupers = new FiltrdStack(), filters = new FiltrdStack(), appliedFilters = new FiltrdStack(), rows = (new FiltrdStack(), 
     new FiltrdStack()), activeRows = new FiltrdStack();
     filtrdRules.loadRules().then(function(rules) {
-        return console.log("rules retrieved: ", rules), filterRules = rules, filterMenu = new FiltrdMenu({
+        return filterRules = rules, filterMenu = new FiltrdMenu({
             element: $(".filtrd-menu")[0],
             rules: filterRules
         }), filterTable = new FiltrdTable({
             element: $(".filtrd-table")[0]
-        }), filterTable.getFiltersAndRows();
+        }), filterPagination = new FiltrdPagination({
+            element: $(".filtrd-table")[0]
+        }), console.log("check"), filterTable.getFiltersAndRows();
     }).then(function(obj) {
-        console.log("table parsed: ", obj);
         var key = null;
         filters.push(obj.filters), rows.push(obj.rows), divideFiltersIntoCollections(filters);
         for (key in filterCollections) eventHub.emit("collection.ready", filterCollections[key]);
         eventHub.on("filter.apply", function(filter) {
             var length = appliedSupers.length;
             appliedFilters.push(filter) && (filter.isSuper && (appliedSupers.push(filter), 0 === length && eventHub.emit("super.applied")), 
-            console.log("FILTER APPLIED: ", appliedFilters), eventHub.emit("filter.applied", appliedFilters));
+            eventHub.emit("filter.applied", appliedFilters));
         }), eventHub.on("filter.remove", function(filter) {
             appliedFilters.remove(filter) && (filter.isSuper && appliedSupers.remove(filter), 
             filterRules && filterRules.super && 0 === appliedSupers.length && eventHub.emit("super.removed"), 
@@ -4329,12 +4330,12 @@
             }, this), shouldShow ? this.setActive() : this.setInactive();
         },
         setActive: function() {
-            this.isInactive && (console.log("FiltrdButton: setActive: ", this), this.isInactive = !1, 
-            this.$el.removeClass("filter_inactive"), eventHub.emit("button.active", this));
+            this.isInactive && (this.isInactive = !1, this.$el.removeClass("filter_inactive"), 
+            eventHub.emit("button.active", this));
         },
         setInactive: function() {
-            this.isInactive || (console.log("FiltrdButton: setInactive: ", this), this.isInactive = !0, 
-            this.$el.addClass("filter_inactive"), eventHub.emit("button.inactive", this));
+            this.isInactive || (this.isInactive = !0, this.$el.addClass("filter_inactive"), 
+            eventHub.emit("button.inactive", this));
         },
         show: function() {
             this.isHidden = !1, this._show();
@@ -4498,8 +4499,36 @@
             this.isHidden && (this.isHidden = !1, this.$el.removeClass("set_hidden"));
         }
     }, FiltrdSet;
-} ]), injekter.define("FiltrdPagination", [ function() {
+} ]), injekter.define("FiltrdPagination", [ "eventHub", function(eventHub) {
     "use strict";
-    function FiltrdPagination() {}
-    return FiltrdPagination;
+    function FiltrdPagination(options) {
+        console.log("FiltrdPagination"), this.$el = $(options.element), this.hasNext = !1, 
+        this.hasPrevious = !1, this.$buttonBar = null, this.$nextButton = null, this.$prevButton = null, 
+        this.$filterInfo = null, this.pageLimit = 12, this.currentIndex = 0, this.currentPage = [], 
+        this.allRows = [], this.init.call(this);
+    }
+    return FiltrdPagination.prototype = {
+        constructor: FiltrdPagination,
+        template: function() {
+            return $('<div class="filtrd-pagination"><div class="filtrd-info"></div><div class="filtrd-buttons"><p class="paginate_disabled_previous">Previous</p><p class="paginate_disabled_next">Next</p></div></div>');
+        },
+        hasNext: !1,
+        hasPrevious: !1,
+        currentPage: [],
+        activeRows: [],
+        pageLimit: 12,
+        currentIndex: 0,
+        init: function() {
+            eventHub.on("row.change", this.handleRowChange, this);
+        },
+        handleRowChange: function(evt) {
+            this.allRows = evt.activeRows, this.allRows.length > this.pageLimit && (this.$buttonBar = this.template(), 
+            self.$nextButton = this.$buttonBar.find('[class*="_next"]'), self.$previousButton = this.$buttonBar.find('[class*="_previous"]')), 
+            this.allRows.each(function(row, index) {
+                index < this.pageLimit ? this.currentPage.push(row) : row.hide();
+            }, this);
+        },
+        getNextPage: function() {},
+        getPrevPage: function() {}
+    }, FiltrdPagination;
 } ]);

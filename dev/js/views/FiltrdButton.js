@@ -167,7 +167,6 @@ injekter.define('FiltrdButton', ['eventHub', function(eventHub) {
 		setActive : function() {
 
 			if (this.isInactive) {
-				console.log('FiltrdButton: setActive: ', this);
 				this.isInactive = false;
 				this.$el.removeClass('filter_inactive');
 				eventHub.emit('button.active', this);
@@ -182,7 +181,6 @@ injekter.define('FiltrdButton', ['eventHub', function(eventHub) {
 		setInactive : function() {
 
 			if (!this.isInactive) {
-				console.log('FiltrdButton: setInactive: ', this);
 				this.isInactive = true;
 				this.$el.addClass('filter_inactive');
 				eventHub.emit('button.inactive', this);

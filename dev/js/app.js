@@ -1,4 +1,4 @@
-injekter.run(['eventHub', 'injekter.config', 'FiltrdTable', 'FiltrdMenu', 'filtrdRules', 'FiltrdStack'], function(eventHub, config, FiltrdTable, FiltrdMenu, filtrdRules, FiltrdStack) {
+injekter.run(['eventHub', 'injekter.config', 'FiltrdTable', 'FiltrdMenu', 'filtrdRules', 'FiltrdStack', 'FiltrdPagination'], function(eventHub, config, FiltrdTable, FiltrdMenu, filtrdRules, FiltrdStack, FiltrdPagination) {
 
 	'use strict';
 
@@ -15,12 +15,16 @@ injekter.run(['eventHub', 'injekter.config', 'FiltrdTable', 'FiltrdMenu', 'filtr
 	// the menu of filter options.
 	var filterMenu = null;
 
+	// handles row pagination.
+	var filterPagination = null;
+
 	// table of data to filter based on selected filters.
 	var filterTable = null;
 
-	// filters divided into groups based on key
+	// filters divided into groups based on key.
 	var filterCollections = {};
 
+	// a collection of applied super filters.
 	var appliedSupers = new FiltrdStack();
 
 	// a collection of all filters.
@@ -33,19 +37,17 @@ injekter.run(['eventHub', 'injekter.config', 'FiltrdTable', 'FiltrdMenu', 'filtr
 	// can still be applied to change the row result set.
 	var activeFilters = new FiltrdStack();
 
-	// all rows in table
+	// all rows in table.
 	var rows = new FiltrdStack();
 
-	// all rows that match the applied filters
+	// all rows that match the applied filters.
 	var activeRows = new FiltrdStack();
 
-	// get filter rules
+	// get filter rules.
 	filtrdRules.loadRules()
 
-	// after rules, get filters and rows
+	// after rules, get filters and rows.
 	.then(function(rules) {
-
-		console.log('rules retrieved: ', rules);
 
 		filterRules = rules;
 
@@ -58,13 +60,17 @@ injekter.run(['eventHub', 'injekter.config', 'FiltrdTable', 'FiltrdMenu', 'filtr
 			element : $('.filtrd-table')[0]
 		});
 
+		filterPagination = new FiltrdPagination({
+			element : $('.filtrd-table')[0]
+		});
+
+		console.log('check');
+
 		return filterTable.getFiltersAndRows();
 	})
 
-	// with filters, start rest of application
+	// with filters, start rest of application.
 	.then(function(obj) {
-
-		console.log('table parsed: ', obj);
 
 		var key = null;
 
@@ -95,7 +101,6 @@ injekter.run(['eventHub', 'injekter.config', 'FiltrdTable', 'FiltrdMenu', 'filtr
 					}
 				}
 
-				console.log('FILTER APPLIED: ', appliedFilters);
 				eventHub.emit('filter.applied', appliedFilters);
 			}
 		});
