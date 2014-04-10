@@ -1,0 +1,63 @@
+/*
+	grey used for main borders and backgrounds
+	also used for standard copy
+*/
+$basegrey: #6e6c63;
+
+/*
+	faint grey.
+	used to add subtle separation to UI elements.
+	primarily as a background color
+*/
+$faintgrey: #f1f0f0;
+
+/*
+	used for image borders and other more subtle divisions
+*/
+$lightgrey: #cccccc;
+
+/*
+	medium grey. used for some text
+*/
+$medgrey: #999893;
+
+/*
+	dark grey. used for most other text
+*/
+$darkgrey: #393835;
+
+/*
+	used because i like a slightly off black
+*/
+$black: #181816;
+
+/*
+	default red for glidewell direct
+*/
+$red: #990000;
+
+/*
+	default red for glidewell direct
+*/
+$red_2: #da2128;
+
+/*
+	used for category page main headings
+*/
+$darkblue: #4680b1;
+
+/*
+	highlight blue
+	used for highlighted text
+*/
+$highblue: #227cc1;
+
+$yellow: #d9a500;
+
+/* FONTS */
+$sans-one: "HelveticaNeue-CondensedBold", "Helvetica Neue", Helvetica, Arial, sans-serif;
+$sans-two: "Helvetica Neue", Helvetica, Arial, sans-serif;
+$sans-three: "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+$serif-one: "Times New Roman", Georgia, Times, serif;
+$serif-mono: "Courier New", Courier, monospace;;

@@ -1,0 +1,28 @@
+{
+  "name": "filtrd",
+  "version": "0.0.0",
+  "description": "Filter and sort table data",
+  "main": "Gruntfile.js",
+  "dependencies": {
+    "grunt": "~0.4.4",
+    "grunt-contrib-watch": "~0.6.0",
+    "grunt-contrib-sass": "~0.7.3",
+    "grunt-contrib-uglify": "~0.4.0"
+  },
+  "devDependencies": {
+    "express": "^3.5.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kevinbgreene/filtrd.git"
+  },
+  "author": "Kevin B. Greene",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kevinbgreene/filtrd/issues"
+  },
+  "homepage": "https://github.com/kevinbgreene/filtrd"
+}

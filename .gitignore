@@ -1,0 +1,9 @@
+.DS_Store
+.bowerrc
+.sass-cache
+dev/_old
+dev/js/vendor
+_notes.txt
+test
+node_modules
+server.js

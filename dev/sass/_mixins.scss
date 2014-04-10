@@ -1,0 +1,64 @@
+@mixin button-trans($time: 0.3s) {
+	-webkit-transition: background $time, color $time, opacity $time, border $time;
+    -moz-transition: background $time, color $time, opacity $time, border $time;
+    -ms-transition: background $time, color $time, opacity $time, border $time;
+    transition: background $time, color $time, opacity $time, border $time;
+}
+
+/*@include trans(#{left 0.3s, right 0.3s, opacity 0.3s});*/
+
+@mixin trans($trans: all 0.3s) {
+    -webkit-transition: $trans;
+    -moz-transition: $trans;
+    -ms-transition: $trans;
+    transition: $trans;
+}
+
+@mixin transf($trans) {
+    -webkit-transform: $trans;
+    -moz-transform: $trans;
+    -ms-transform: $trans;
+    transform: $trans;
+}
+
+@mixin gradient($start : #fff, $end : #000, $solid : $start) {
+	background: $solid;
+    background: -webkit-linear-gradient(top, $start 0%,$end 100%);
+    background: -moz-linear-gradient(top, $start 0%, $end 100%);
+    background: -ms-linear-gradient(top, $start 0%,$end 100%);
+    background: linear-gradient(to bottom, $start 0%,$end 100%);
+}
+
+@mixin media($type) {
+  
+    @if $type == medium {
+
+    	@media only screen and (max-width:1280px) {
+          	@content;
+      	}
+    }
+    @else if $type == small {
+
+    	@media only screen and (max-width:1080px) {
+          	@content;
+      	}
+    }
+    @else if $type == tablet {
+  
+      	@media only screen and (max-width:768px) {
+       		@content;
+      	}
+    }
+    @else if $type == mobile {
+  
+      	@media only screen and (max-width:480px) {
+          	@content;
+      	}
+    }
+    @else if $type == hires {
+      
+      	@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+        	@content;
+      	}
+    }
+}

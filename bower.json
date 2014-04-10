@@ -1,0 +1,23 @@
+{
+  "name": "filtrd",
+  "version": "0.0.0",
+  "homepage": "https://github.com/kevinbgreene/filtrd",
+  "authors": [
+    "Kevin Greene <hightimesteddy@gmail.com>"
+  ],
+  "description": "Filter and sort table data",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "dev/js/vendor/",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "injekter": "https://github.com/kevinbgreene/injekter.git",
+    "jquery": "1.10",
+    "q": "1.0"
+  }
+}
