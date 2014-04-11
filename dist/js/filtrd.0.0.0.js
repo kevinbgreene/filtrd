@@ -4518,17 +4518,62 @@
         activeRows: [],
         pageLimit: 12,
         currentIndex: 0,
+        numPages: 0,
         init: function() {
             eventHub.on("row.change", this.handleRowChange, this);
         },
         handleRowChange: function(evt) {
-            this.allRows = evt.activeRows, this.allRows.length > this.pageLimit && (this.$buttonBar = this.template(), 
-            self.$nextButton = this.$buttonBar.find('[class*="_next"]'), self.$previousButton = this.$buttonBar.find('[class*="_previous"]')), 
-            this.allRows.each(function(row, index) {
-                index < this.pageLimit ? this.currentPage.push(row) : row.hide();
-            }, this);
+            this.tearDown(), this.allRows = evt.activeRows, this.allRows.length > this.pageLimit && this.setupPages(), 
+            this.updateDisplay();
         },
-        getNextPage: function() {},
-        getPrevPage: function() {}
+        setupPages: function() {
+            var self = this;
+            this.numPages = Math.ceil(this.allRows.length / this.pageLimit), this.hasPrevious = !1, 
+            this.$buttonBar = this.template(), self.$filterInfo = this.$buttonBar.find(".filtrd-info"), 
+            this.$nextButton = this.$buttonBar.find('[class*="_next"]'), this.$prevButton = this.$buttonBar.find('[class*="_previous"]'), 
+            this.$el.append(this.$buttonBar), this.$nextButton.on("click", function(evt) {
+                evt.preventDefault(), evt.stopPropagation(), self.hasNext && self.getNextPage();
+            }), this.$prevButton.on("click", function(evt) {
+                evt.preventDefault(), evt.stopPropagation(), self.hasPrevious && self.getPrevPage();
+            }), this.updateState();
+        },
+        updateDisplay: function() {
+            var i = 0, start = this.currentIndex * this.pageLimit, end = start + this.pageLimit, len = this.allRows.length;
+            for (end > len && (end = len), this.allRows.each(function(row) {
+                row.hide();
+            }, this), i = start; end > i; i++) this.allRows.get(i).show();
+            len > this.pageLimit && (this.updateData({
+                start: start,
+                end: end,
+                total: this.allRows.length
+            }), this.updateState());
+        },
+        updateData: function(data) {
+            var self = this;
+            self.$filterInfo.css({
+                display: "none"
+            }), self.$filterInfo.html("Items " + data.start + " - " + data.end + " of " + data.total), 
+            setTimeout(function() {
+                self.$filterInfo.css({
+                    display: "block"
+                });
+            }, 0);
+        },
+        updateState: function() {
+            this.hasPrevious = this.currentIndex > 0 ? !0 : !1, this.hasNext = this.currentIndex < this.numPages - 1 ? !0 : !1, 
+            this.hasPrevious ? this.$prevButton.removeClass("paginate_disabled_previous").addClass("paginate_previous") : this.$prevButton.removeClass("paginate_previous").addClass("paginate_disabled_previous"), 
+            this.hasNext ? this.$nextButton.removeClass("paginate_disabled_next").addClass("paginate_next") : this.$nextButton.removeClass("paginate_next").addClass("paginate_disabled_next");
+        },
+        getNextPage: function() {
+            this.currentIndex++, this.updateDisplay();
+        },
+        getPrevPage: function() {
+            this.currentIndex--, this.updateDisplay();
+        },
+        tearDown: function() {
+            this.allRows = [], this.currentIndex = 0, this.hasPrevious = !1, this.hasNext = !1, 
+            this.$buttonBar && (this.$nextButton.off(), this.$prevButton.off(), this.$buttonBar.remove(), 
+            this.$buttonBar = null, this.$nextButton = null, this.$prevButton = null, this.$filterInfo = null);
+        }
     }, FiltrdPagination;
 } ]);
