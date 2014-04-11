@@ -36,9 +36,6 @@ module.exports = function(grunt) {
                     'dist/js/filtrd.<%= pkg.version %>.js': [
 
                         'dev/js/core/polyfills.js',
-                        'dev/js/vendor/jquery/jquery.js',
-                        'dev/js/vendor/q/q.js',
-                        'dev/js/vendor/injekter/injekter.js',
 
                         'dev/js/app.js',
 

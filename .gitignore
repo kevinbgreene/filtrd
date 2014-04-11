@@ -3,6 +3,7 @@
 .sass-cache
 dev/_old
 dev/js/vendor
+dist/js/vendor
 _notes.txt
 test
 node_modules
