@@ -39,6 +39,9 @@ injekter.run(['eventHub', 'FiltrdTable', 'FiltrdMenu', 'filtrdRules', 'FiltrdSta
 	// all rows that match the applied filters.
 	var activeRows = new FiltrdStack();
 
+	// a hash of all active buttons, organized by filter key value.
+	var activeButtons = {};
+
 	// get filter rules.
 	filtrdRules.loadRules()
 
@@ -64,13 +67,13 @@ injekter.run(['eventHub', 'FiltrdTable', 'FiltrdMenu', 'filtrdRules', 'FiltrdSta
 	})
 
 	// with filters, start rest of application.
-	.then(function(obj) {
+	.done(function(rowsAndFilters) {
 
 		var key = null;
 
 		// add rows and filters to appropriate stacks.
-		filters.push(obj.filters);
-		rows.push(obj.rows);
+		filters.push(rowsAndFilters.filters);
+		rows.push(rowsAndFilters.rows);
 
 		// group filters by key.
 		divideFiltersIntoCollections(filters);
@@ -79,6 +82,34 @@ injekter.run(['eventHub', 'FiltrdTable', 'FiltrdMenu', 'filtrdRules', 'FiltrdSta
 		for (key in filterCollections) {
 			eventHub.emit('collection.ready', filterCollections[key]);
 		}
+
+		eventHub.on('button.active', function(button) {
+
+			var key = button.filter.key;
+
+			if(!activeButtons[key]) {
+				activeButtons[key] = new FiltrdStack();
+			}
+
+			if (activeButtons[key].push(button)) {
+
+				eventHub.delay('buttons.changed', activeButtons, true);
+			}
+		});
+
+		eventHub.on('button.inactive', function(button) {
+
+			var key = button.filter.key;
+
+			if(!activeButtons[key]) {
+				return;
+			}
+
+			if (activeButtons[key].remove(button)) {
+
+				eventHub.delay('buttons.changed', activeButtons, true);
+			};
+		});
 
 		eventHub.on('filter.apply', function(filter) {
 
@@ -91,11 +122,11 @@ injekter.run(['eventHub', 'FiltrdTable', 'FiltrdMenu', 'filtrdRules', 'FiltrdSta
 					appliedSupers.push(filter);
 
 					if (length === 0) {
-						eventHub.emit('super.applied');
+						eventHub.delay('super.applied');
 					}
 				}
 
-				eventHub.emit('filter.applied', appliedFilters);
+				eventHub.delay('filter.applied', appliedFilters, true);
 			}
 		});
 
@@ -111,10 +142,10 @@ injekter.run(['eventHub', 'FiltrdTable', 'FiltrdMenu', 'filtrdRules', 'FiltrdSta
 					filterRules.super && 
 					appliedSupers.length === 0) {
 					
-					eventHub.emit('super.removed');
+					eventHub.delay('super.removed');
 				}
 
-				eventHub.emit('filter.removed', appliedFilters);
+				eventHub.delay('filter.removed', appliedFilters, true);
 			}
 		});
 
@@ -140,7 +171,7 @@ injekter.run(['eventHub', 'FiltrdTable', 'FiltrdMenu', 'filtrdRules', 'FiltrdSta
 			}
 		});
 
-		eventHub.emit('filter.applied', []);
+		eventHub.next('filter.applied', []);
 
 		// if we have filter rules we need to notify relevant modules what
 		// rules they need to display with.

@@ -84,17 +84,17 @@ injekter.define('FiltrdRow', ['eventHub', 'FiltrdStack', function(eventHub, Filt
 			var len = filters.length;
 			var isActive = true;
 
+			this.setInactive();
+
 			for (i=0;i<len;i++) {
 
 				if (!this.hasFilter(filters.get(i))) {
 					isActive = false;
+					break;
 				}
 			}
 
-			if (!isActive) {
-				this.setInactive();
-			}
-			else {
+			if (isActive) {
 				this.setActive();
 			}
 		},
@@ -104,9 +104,8 @@ injekter.define('FiltrdRow', ['eventHub', 'FiltrdStack', function(eventHub, Filt
 		*
 		* @async
 		* @method parseFilterValues
-		* @param {Function} callback
 		*/
-		parseFilterValues : function(callback) {
+		parseFilterValues : function() {
 
 			var self = this;
 			var counter = 0;
@@ -115,14 +114,12 @@ injekter.define('FiltrdRow', ['eventHub', 'FiltrdStack', function(eventHub, Filt
 			var filter = null;
 
 			temp = this.$el.find('.filtrd-filter');
-			length = temp.length;
 
-			function checkFilter(filter) {
+			temp.each(function() {
 
-				var $filter = $(filter);
-				var next = null;
-				var len = 0;
+				var $filter = $(this);
 				var values = [];
+				var len = 0;
 				var i = 0;
 
 				if ($filter.text() && $filter.text() !== ' ') {
@@ -139,26 +136,12 @@ injekter.define('FiltrdRow', ['eventHub', 'FiltrdStack', function(eventHub, Filt
 
 						self.filters.push(filter);
 					}
+
+					counter = counter + 1;
 				}
+			});
 
-				counter = counter + 1;
-
-				if (counter < length) {
-
-					next = temp.eq(counter);
-
-					setTimeout(function() {
-						checkFilter(next);
-					}, 0);
-				}
-				else {
-					callback(self.filters);
-				}
-			}
-
-			if (length > 0) {
-				checkFilter(temp.eq(counter));
-			}
+			return self.filters;
 		},
 
 		/**
@@ -194,7 +177,7 @@ injekter.define('FiltrdRow', ['eventHub', 'FiltrdStack', function(eventHub, Filt
 			if (!this.isActive) {
 				this.isActive = true;
 				this.$el.removeClass('row_inactive');
-				eventHub.delay('row.active', this);
+				eventHub.next('row.active', this);
 			}
 		},
 
@@ -208,7 +191,7 @@ injekter.define('FiltrdRow', ['eventHub', 'FiltrdStack', function(eventHub, Filt
 			if (this.isActive) {
 				this.isActive = false;
 				this.$el.addClass('row_inactive');
-				eventHub.delay('row.inactive', this);
+				eventHub.next('row.inactive', this);
 			}
 		},
 

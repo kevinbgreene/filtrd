@@ -26,6 +26,8 @@ injekter.run([ "eventHub", "FiltrdTable", "FiltrdMenu", "filtrdRules", "FiltrdSt
     var rows = new FiltrdStack();
     // all rows that match the applied filters.
     var activeRows = new FiltrdStack();
+    // a hash of all active buttons, organized by filter key value.
+    var activeButtons = {};
     // get filter rules.
     filtrdRules.loadRules().then(function(rules) {
         filterRules = rules;
@@ -40,27 +42,45 @@ injekter.run([ "eventHub", "FiltrdTable", "FiltrdMenu", "filtrdRules", "FiltrdSt
             element: $(".filtrd-table")[0]
         });
         return filterTable.getFiltersAndRows();
-    }).then(function(obj) {
+    }).done(function(rowsAndFilters) {
         var key = null;
         // add rows and filters to appropriate stacks.
-        filters.push(obj.filters);
-        rows.push(obj.rows);
+        filters.push(rowsAndFilters.filters);
+        rows.push(rowsAndFilters.rows);
         // group filters by key.
         divideFiltersIntoCollections(filters);
         // alert listeners of the new collections.
         for (key in filterCollections) {
             eventHub.emit("collection.ready", filterCollections[key]);
         }
+        eventHub.on("button.active", function(button) {
+            var key = button.filter.key;
+            if (!activeButtons[key]) {
+                activeButtons[key] = new FiltrdStack();
+            }
+            if (activeButtons[key].push(button)) {
+                eventHub.delay("buttons.changed", activeButtons, true);
+            }
+        });
+        eventHub.on("button.inactive", function(button) {
+            var key = button.filter.key;
+            if (!activeButtons[key]) {
+                return;
+            }
+            if (activeButtons[key].remove(button)) {
+                eventHub.delay("buttons.changed", activeButtons, true);
+            }
+        });
         eventHub.on("filter.apply", function(filter) {
             var length = appliedSupers.length;
             if (appliedFilters.push(filter)) {
                 if (filter.isSuper) {
                     appliedSupers.push(filter);
                     if (length === 0) {
-                        eventHub.emit("super.applied");
+                        eventHub.delay("super.applied");
                     }
                 }
-                eventHub.emit("filter.applied", appliedFilters);
+                eventHub.delay("filter.applied", appliedFilters, true);
             }
         });
         eventHub.on("filter.remove", function(filter) {
@@ -69,9 +89,9 @@ injekter.run([ "eventHub", "FiltrdTable", "FiltrdMenu", "filtrdRules", "FiltrdSt
                     appliedSupers.remove(filter);
                 }
                 if (filterRules && filterRules.super && appliedSupers.length === 0) {
-                    eventHub.emit("super.removed");
+                    eventHub.delay("super.removed");
                 }
-                eventHub.emit("filter.removed", appliedFilters);
+                eventHub.delay("filter.removed", appliedFilters, true);
             }
         });
         eventHub.on("row.active", function(row) {
@@ -90,7 +110,7 @@ injekter.run([ "eventHub", "FiltrdTable", "FiltrdMenu", "filtrdRules", "FiltrdSt
                 }, true);
             }
         });
-        eventHub.emit("filter.applied", []);
+        eventHub.next("filter.applied", []);
         // if we have filter rules we need to notify relevant modules what
         // rules they need to display with.
         if (filterRules) {
@@ -615,6 +635,7 @@ injekter.define("FiltrdMenu", [ "eventHub", "FiltrdSet", function(eventHub, Filt
             eventHub.on("super.applied", this.handleSuperApplied, this);
             eventHub.on("super.removed", this.handleSuperRemoved, this);
             eventHub.on("sets.sort", this.sort, this);
+            $(window).on("resize", this._handleResize.bind(this));
         },
         /**
 		* 
@@ -725,7 +746,6 @@ injekter.define("FiltrdTable", [ "eventHub", "FiltrdHeader", "FiltrdRow", functi
     "use strict";
     function FiltrdTable(options) {
         this.$el = $(options.element);
-        this.scope = options.scope;
         this.header = null;
         this.rows = [];
         this.init.call(this);
@@ -742,16 +762,14 @@ injekter.define("FiltrdTable", [ "eventHub", "FiltrdHeader", "FiltrdRow", functi
 		* @method getFiltersAndRows
 		*/
         getFiltersAndRows: function() {
-            var self = this;
-            var deferred = Q.defer();
             // get the filter keys
-            this.getFilterKeys().then(this.getFilterValues.bind(this)).done(function(filters) {
-                deferred.resolve({
-                    filters: filters,
-                    rows: self.rows
-                });
-            });
-            return deferred.promise;
+            var keys = this.getFilterKeys();
+            // get filter values
+            var filters = this.getFilterValues(keys);
+            return {
+                filters: filters,
+                rows: this.rows
+            };
         },
         /**
 		* 
@@ -759,12 +777,8 @@ injekter.define("FiltrdTable", [ "eventHub", "FiltrdHeader", "FiltrdRow", functi
 		* @method getFilterKeys
 		*/
         getFilterKeys: function() {
-            var deferred = Q.defer();
             this.parseHeader();
-            this.header.parseFilterKeys(function(keys) {
-                deferred.resolve(keys);
-            });
-            return deferred.promise;
+            return this.header.parseFilterKeys();
         },
         /**
 		* Parses filtrd rows and pulls out the values for the filters. Parsing
@@ -774,7 +788,6 @@ injekter.define("FiltrdTable", [ "eventHub", "FiltrdHeader", "FiltrdRow", functi
 		* @method getFilterValues
 		*/
         getFilterValues: function(keys) {
-            var deferred = Q.defer();
             var self = this;
             var counter = 0;
             var length = 0;
@@ -782,20 +795,15 @@ injekter.define("FiltrdTable", [ "eventHub", "FiltrdHeader", "FiltrdRow", functi
             this.parseRows();
             length = this.rows.length;
             this.rows.forEach(function(row) {
-                row.parseFilterValues(function(newFilters) {
-                    newFilters.each(function(filter) {
-                        filter.key = keys[filter.index].key;
-                        if (!self._hasFilter(filter, filters)) {
-                            filters.push(filter);
-                        }
-                    });
-                    counter = counter + 1;
-                    if (counter >= length) {
-                        deferred.resolve(filters);
+                var newFilters = row.parseFilterValues();
+                newFilters.each(function(filter) {
+                    filter.key = keys[filter.index].key;
+                    if (!self._hasFilter(filter, filters)) {
+                        filters.push(filter);
                     }
                 });
             });
-            return deferred.promise;
+            return filters;
         },
         /**
 		* 
@@ -931,14 +939,14 @@ injekter.define("FiltrdRow", [ "eventHub", "FiltrdStack", function(eventHub, Fil
             var i = 0;
             var len = filters.length;
             var isActive = true;
+            this.setInactive();
             for (i = 0; i < len; i++) {
                 if (!this.hasFilter(filters.get(i))) {
                     isActive = false;
+                    break;
                 }
             }
-            if (!isActive) {
-                this.setInactive();
-            } else {
+            if (isActive) {
                 this.setActive();
             }
         },
@@ -947,21 +955,18 @@ injekter.define("FiltrdRow", [ "eventHub", "FiltrdStack", function(eventHub, Fil
 		*
 		* @async
 		* @method parseFilterValues
-		* @param {Function} callback
 		*/
-        parseFilterValues: function(callback) {
+        parseFilterValues: function() {
             var self = this;
             var counter = 0;
             var length = 0;
             var temp = [];
             var filter = null;
             temp = this.$el.find(".filtrd-filter");
-            length = temp.length;
-            function checkFilter(filter) {
-                var $filter = $(filter);
-                var next = null;
-                var len = 0;
+            temp.each(function() {
+                var $filter = $(this);
                 var values = [];
+                var len = 0;
                 var i = 0;
                 if ($filter.text() && $filter.text() !== " ") {
                     values = $filter.text().split("|");
@@ -973,20 +978,10 @@ injekter.define("FiltrdRow", [ "eventHub", "FiltrdStack", function(eventHub, Fil
                         };
                         self.filters.push(filter);
                     }
+                    counter = counter + 1;
                 }
-                counter = counter + 1;
-                if (counter < length) {
-                    next = temp.eq(counter);
-                    setTimeout(function() {
-                        checkFilter(next);
-                    }, 0);
-                } else {
-                    callback(self.filters);
-                }
-            }
-            if (length > 0) {
-                checkFilter(temp.eq(counter));
-            }
+            });
+            return self.filters;
         },
         /**
 		* 
@@ -1013,7 +1008,7 @@ injekter.define("FiltrdRow", [ "eventHub", "FiltrdStack", function(eventHub, Fil
             if (!this.isActive) {
                 this.isActive = true;
                 this.$el.removeClass("row_inactive");
-                eventHub.delay("row.active", this);
+                eventHub.next("row.active", this);
             }
         },
         /**
@@ -1025,7 +1020,7 @@ injekter.define("FiltrdRow", [ "eventHub", "FiltrdStack", function(eventHub, Fil
             if (this.isActive) {
                 this.isActive = false;
                 this.$el.addClass("row_inactive");
-                eventHub.delay("row.inactive", this);
+                eventHub.next("row.inactive", this);
             }
         },
         /**
@@ -1077,34 +1072,21 @@ injekter.define("FiltrdHeader", [ "eventHub", function(eventHub) {
 		* 
 		*
 		* @method parseFilterKeys
-		* @param {Function} callback
 		*/
-        parseFilterKeys: function(callback) {
+        parseFilterKeys: function() {
             var counter = 0;
             var keys = [];
             var length = 0;
-            var temp = [];
+            var temp = null;
             temp = this.$el.find(".filtrd-filter");
-            length = temp.length;
-            function checkFilter(filter) {
-                var next = null;
+            temp.each(function() {
                 keys.push({
                     index: counter,
-                    key: $(filter).text()
+                    key: $(this).text()
                 });
                 counter = counter + 1;
-                if (counter < length) {
-                    next = temp.eq(counter);
-                    setTimeout(function() {
-                        checkFilter(next);
-                    }, 0);
-                } else {
-                    callback(keys);
-                }
-            }
-            if (length > 0) {
-                checkFilter(temp.eq(counter));
-            }
+            });
+            return keys;
         }
     };
     return FiltrdHeader;
@@ -1481,8 +1463,7 @@ injekter.define("FiltrdSet", [ "eventHub", "FiltrdButton", function(eventHub, Fi
         },
         init: function() {
             this.addCollectionToView();
-            eventHub.on("button.active", this.handleButtonActive, this);
-            eventHub.on("button.inactive", this.handleButtonInactive, this);
+            eventHub.on("buttons.changed", this.handleButtonChange, this);
             eventHub.on("super.applied", this.handleSuperApplied, this);
             eventHub.on("super.removed", this.handleSuperRemoved, this);
         },
@@ -1490,39 +1471,17 @@ injekter.define("FiltrdSet", [ "eventHub", "FiltrdButton", function(eventHub, Fi
 		* Check if the newly active button belongs to this set. If so, make sure this
 		* set is active and add the button to the array of active entries.
 		*
-		* @method handleButtonActive
+		* @method handleButtonChange
 		* @param {Object} button
 		*/
-        handleButtonActive: function(button) {
-            var index = this.entries.indexOf(button);
-            // if this button is part of this set and hasn't already been added
-            // to the array of active entries, add it to the array and update the
-            // display.
-            if (index > -1 && this.activeEntries.indexOf(button) === -1) {
-                this.activeEntries.push(button);
+        handleButtonChange: function(buttons) {
+            this.activeEntries = buttons[this.title] || [];
+            if (!this.activeEntries || this.activeEntries.length === 0) {
+                this.setInactive();
+            } else {
                 this.setActive();
-                this.updateDisplay();
             }
-        },
-        /**
-		* Check if the newly inactive button belongs to this set. If so, remove it from
-		* the list of active entries and, if the active entries array is left empty, set
-		* this set as inactive.
-		*
-		* @method handleButtonInactive
-		* @param {Object} button
-		*/
-        handleButtonInactive: function(button) {
-            var index = this.activeEntries.indexOf(button);
-            if (index > -1) {
-                this.activeEntries.splice(index, 1);
-                if (this.activeEntries.length === 0) {
-                    this.setInactive();
-                } else {
-                    this.setActive();
-                }
-                this.updateDisplay();
-            }
+            this.updateDisplay();
         },
         /**
 		* When a super is applied all sets should be visible.
@@ -1579,7 +1538,7 @@ injekter.define("FiltrdSet", [ "eventHub", "FiltrdButton", function(eventHub, Fi
                 clearTimeout(this.displayThrottle);
                 this.displayThrottle = null;
             }
-            this.displayThrottle = setTimeout(this.refreshDisplay.bind(this), 50);
+            this.displayThrottle = setTimeout(this.refreshDisplay.bind(this), 10);
         },
         /**
 		* Refreshes the display after sorting has changed or a filter is added. This
@@ -1611,7 +1570,7 @@ injekter.define("FiltrdSet", [ "eventHub", "FiltrdButton", function(eventHub, Fi
 		*/
         refreshButtonVisibility: function() {
             var i = 0;
-            var len = this.activeEntries.length;
+            var len = this.activeEntries.length || 0;
             var tempEntry = null;
             this.displayEntries = [];
             this.$header.off();
@@ -1620,16 +1579,16 @@ injekter.define("FiltrdSet", [ "eventHub", "FiltrdButton", function(eventHub, Fi
                 this.moreButton.remove();
                 this.moreButton = null;
             }
-            if (this.activeEntries.length > this.showLimit) {
-                this.hideAllButtons();
-                this.$header.on("click", this.toggle.bind(this));
-                for (i = 0; i < len; i++) {
-                    tempEntry = this.activeEntries[i];
-                    if (this.displayEntries.length < this.showLimit) {
-                        this.displayEntries.push(tempEntry);
-                        tempEntry.show();
-                    }
+            this.hideAllButtons();
+            for (i = 0; i < len; i++) {
+                tempEntry = this.activeEntries.get(i);
+                if (this.displayEntries.length < this.showLimit) {
+                    this.displayEntries.push(tempEntry);
+                    tempEntry.show();
                 }
+            }
+            if (len > this.showLimit) {
+                this.$header.on("click", this.toggle.bind(this));
                 if (!this.moreButton && !this.isMobile) {
                     this.moreButton = this.moreBtnTemplate();
                     this.$el.append(this.moreButton);
@@ -1678,7 +1637,7 @@ injekter.define("FiltrdSet", [ "eventHub", "FiltrdButton", function(eventHub, Fi
             var len1 = this.activeEntries.length;
             var len2 = this.displayEntries.length;
             for (i = 0; i < len1; i++) {
-                this.activeEntries[i].show();
+                this.activeEntries.get(i).show();
             }
             if (this.isMobile) {
                 this.$header.html("[-] " + this.title);
@@ -1699,7 +1658,7 @@ injekter.define("FiltrdSet", [ "eventHub", "FiltrdButton", function(eventHub, Fi
             var len1 = this.activeEntries.length;
             var len2 = this.displayEntries.length;
             for (i = 0; i < len1; i++) {
-                this.activeEntries[i].hide();
+                this.activeEntries.get(i).hide();
             }
             for (i = 0; i < len2; i++) {
                 this.displayEntries[i].show();
@@ -1737,6 +1696,7 @@ injekter.define("FiltrdSet", [ "eventHub", "FiltrdButton", function(eventHub, Fi
 		* @method setMobile
 		*/
         setMobile: function() {
+            console.log("FiltrdSet: setMobile: " + this.title);
             if (!this.isMobile) {
                 this.isMobile = true;
                 this.showLimit = 0;
@@ -1754,6 +1714,7 @@ injekter.define("FiltrdSet", [ "eventHub", "FiltrdButton", function(eventHub, Fi
 		* @method setDesktop
 		*/
         setDesktop: function() {
+            console.log("FiltrdSet: setDesktop: " + this.title);
             if (this.isMobile) {
                 this.isMobile = false;
                 this.showLimit = this.defaultLimit;
@@ -1937,7 +1898,6 @@ injekter.define("FiltrdPagination", [ "eventHub", function(eventHub) {
                     self.getPrevPage();
                 }
             });
-            this.updateState();
         },
         /**
 		* 

@@ -15,7 +15,6 @@ injekter.define('FiltrdTable', ['eventHub', 'FiltrdHeader', 'FiltrdRow', functio
 	function FiltrdTable(options) {
 
 		this.$el = $(options.element);
-		this.scope = options.scope;
 
 		this.header = null;
 		this.rows = [];
@@ -41,25 +40,16 @@ injekter.define('FiltrdTable', ['eventHub', 'FiltrdHeader', 'FiltrdRow', functio
 		*/
 		getFiltersAndRows : function() {
 
-			var self = this;
-			var deferred = Q.defer();
-
 			// get the filter keys
-			this.getFilterKeys()
+			var keys = this.getFilterKeys();
 			
 			// get filter values
-			.then(this.getFilterValues.bind(this))
-			
-			// resolve with filters and rows
-			.done(function(filters) {
+			var filters = this.getFilterValues(keys);
 
-				deferred.resolve({
-					filters : filters,
-					rows : self.rows
-				});
-			});
-
-			return deferred.promise;
+			return {
+				filters : filters,
+				rows : this.rows
+			};
 		},
 
 		/**
@@ -69,16 +59,9 @@ injekter.define('FiltrdTable', ['eventHub', 'FiltrdHeader', 'FiltrdRow', functio
 		*/
 		getFilterKeys : function() {
 
-			var deferred = Q.defer();
-
 			this.parseHeader();
 
-			this.header.parseFilterKeys(function(keys) {
-
-				deferred.resolve(keys);
-			});
-
-			return deferred.promise;
+			return this.header.parseFilterKeys();
 		},
 
 		/**
@@ -89,8 +72,6 @@ injekter.define('FiltrdTable', ['eventHub', 'FiltrdHeader', 'FiltrdRow', functio
 		* @method getFilterValues
 		*/
 		getFilterValues : function(keys) {
-
-			var deferred = Q.defer();
 
 			var self = this;
 			var counter = 0;
@@ -104,27 +85,19 @@ injekter.define('FiltrdTable', ['eventHub', 'FiltrdHeader', 'FiltrdRow', functio
 
 			this.rows.forEach(function(row) {
 
-				row.parseFilterValues(function(newFilters) {
+				var newFilters = row.parseFilterValues();
 
-					newFilters.each(function(filter) {
+				newFilters.each(function(filter) {
 
-						filter.key = keys[filter.index].key;
+					filter.key = keys[filter.index].key;
 
-						if (!self._hasFilter(filter, filters)) {
-							filters.push(filter);
-						}
-					});
-
-					counter = counter + 1;
-
-					if (counter >= length) {
-
-						deferred.resolve(filters);
+					if (!self._hasFilter(filter, filters)) {
+						filters.push(filter);
 					}
 				});
 			});
 
-			return deferred.promise;
+			return filters;
 		},
 
 		/**

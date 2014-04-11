@@ -172,8 +172,6 @@ injekter.define('FiltrdPagination', ['eventHub', function(eventHub) {
 					self.getPrevPage();
 				}
 			});
-
-			this.updateState();
 		},
 
 		/**

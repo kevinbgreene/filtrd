@@ -55,11 +55,14 @@ injekter.define('FiltrdMenu', ['eventHub', 'FiltrdSet', function(eventHub, Filtr
 		throttle : null,
 
 		init : function() {
+			
 			eventHub.on('window.resize', this.handleResize, this);
 			eventHub.on('collection.ready', this.handleNewFilterCollection, this);
 			eventHub.on('super.applied', this.handleSuperApplied, this);
 			eventHub.on('super.removed', this.handleSuperRemoved, this);
 			eventHub.on('sets.sort', this.sort, this);
+
+			$(window).on('resize', this._handleResize.bind(this));
 		},
 
 		/**

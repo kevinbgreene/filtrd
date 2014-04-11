@@ -168,8 +168,7 @@ injekter.define('FiltrdSet', ['eventHub', 'FiltrdButton', function(eventHub, Fil
 
 			this.addCollectionToView();
 
-			eventHub.on('button.active', this.handleButtonActive, this);
-			eventHub.on('button.inactive', this.handleButtonInactive, this);
+			eventHub.on('buttons.changed', this.handleButtonChange, this);
 			eventHub.on('super.applied', this.handleSuperApplied, this);
 			eventHub.on('super.removed', this.handleSuperRemoved, this);
 		},
@@ -178,50 +177,21 @@ injekter.define('FiltrdSet', ['eventHub', 'FiltrdButton', function(eventHub, Fil
 		* Check if the newly active button belongs to this set. If so, make sure this
 		* set is active and add the button to the array of active entries.
 		*
-		* @method handleButtonActive
+		* @method handleButtonChange
 		* @param {Object} button
 		*/
-		handleButtonActive : function(button) {
+		handleButtonChange : function(buttons) {
 
-			var index = this.entries.indexOf(button);
+			this.activeEntries = buttons[this.title] || [];
 
-			// if this button is part of this set and hasn't already been added
-			// to the array of active entries, add it to the array and update the
-			// display.
-			if (index > -1 && 
-				this.activeEntries.indexOf(button) === -1) {
-				
-				this.activeEntries.push(button);
+			if (!this.activeEntries || this.activeEntries.length === 0) {
+				this.setInactive();
+			}
+			else {
 				this.setActive();
-				this.updateDisplay();
 			}
-		},
 
-		/**
-		* Check if the newly inactive button belongs to this set. If so, remove it from
-		* the list of active entries and, if the active entries array is left empty, set
-		* this set as inactive.
-		*
-		* @method handleButtonInactive
-		* @param {Object} button
-		*/
-		handleButtonInactive : function(button) {
-
-			var index = this.activeEntries.indexOf(button);
-
-			if (index > -1) {
-
-				this.activeEntries.splice(index, 1);
-
-				if (this.activeEntries.length === 0) {
-					this.setInactive();
-				}
-				else {
-					this.setActive();
-				}
-
-				this.updateDisplay();
-			}
+			this.updateDisplay();
 		},
 
 		/**
@@ -294,7 +264,7 @@ injekter.define('FiltrdSet', ['eventHub', 'FiltrdButton', function(eventHub, Fil
 				this.displayThrottle = null;
 			}
 
-			this.displayThrottle = setTimeout(this.refreshDisplay.bind(this), 50);
+			this.displayThrottle = setTimeout(this.refreshDisplay.bind(this), 10);
 		},
 
 		/**
@@ -334,7 +304,7 @@ injekter.define('FiltrdSet', ['eventHub', 'FiltrdButton', function(eventHub, Fil
 		refreshButtonVisibility : function() {
 
 			var i = 0;
-			var len = this.activeEntries.length;
+			var len = this.activeEntries.length || 0;
 			var tempEntry = null;
 
 			this.displayEntries = [];
@@ -347,21 +317,21 @@ injekter.define('FiltrdSet', ['eventHub', 'FiltrdButton', function(eventHub, Fil
 				this.moreButton = null;
 			}
 
-			if (this.activeEntries.length > this.showLimit) {
+			this.hideAllButtons();
 
-				this.hideAllButtons();
+			for (i=0;i<len;i++) {
+
+				tempEntry = this.activeEntries.get(i);
+
+				if (this.displayEntries.length < this.showLimit) {
+					this.displayEntries.push(tempEntry);
+					tempEntry.show();
+				}
+			}
+
+			if (len > this.showLimit) {
 
 				this.$header.on('click', this.toggle.bind(this));
-
-				for (i=0;i<len;i++) {
-
-					tempEntry = this.activeEntries[i];
-
-					if (this.displayEntries.length < this.showLimit) {
-						this.displayEntries.push(tempEntry);
-						tempEntry.show();
-					}
-				}
 
 				if (!this.moreButton && !this.isMobile) {
 					this.moreButton = this.moreBtnTemplate();
@@ -424,7 +394,7 @@ injekter.define('FiltrdSet', ['eventHub', 'FiltrdButton', function(eventHub, Fil
 			var len2 = this.displayEntries.length;
 
 			for (i=0;i<len1;i++) {
-				this.activeEntries[i].show();
+				this.activeEntries.get(i).show();
 			}
 
 			if (this.isMobile) {
@@ -450,7 +420,7 @@ injekter.define('FiltrdSet', ['eventHub', 'FiltrdButton', function(eventHub, Fil
 			var len2 = this.displayEntries.length;
 
 			for (i=0;i<len1;i++) {
-				this.activeEntries[i].hide();
+				this.activeEntries.get(i).hide();
 			}
 
 			for (i=0;i<len2;i++) {
@@ -499,6 +469,8 @@ injekter.define('FiltrdSet', ['eventHub', 'FiltrdButton', function(eventHub, Fil
 		*/
 		setMobile : function() {
 
+			console.log('FiltrdSet: setMobile: ' + this.title);
+
 			if (!this.isMobile) {
 
 				this.isMobile = true;
@@ -520,6 +492,8 @@ injekter.define('FiltrdSet', ['eventHub', 'FiltrdButton', function(eventHub, Fil
 		* @method setDesktop
 		*/
 		setDesktop : function() {
+
+			console.log('FiltrdSet: setDesktop: ' + this.title);
 
 			if (this.isMobile) {
 				this.isMobile = false;

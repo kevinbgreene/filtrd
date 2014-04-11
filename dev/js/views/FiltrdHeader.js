@@ -15,45 +15,27 @@ injekter.define('FiltrdHeader', ['eventHub', function(eventHub) {
 		* 
 		*
 		* @method parseFilterKeys
-		* @param {Function} callback
 		*/
-		parseFilterKeys : function(callback) {
+		parseFilterKeys : function() {
 
 			var counter = 0;
 			var keys = [];
 			var length = 0;
-			var temp = [];
+			var temp = null;
 
 			temp = this.$el.find('.filtrd-filter');
-			length = temp.length;
-
-			function checkFilter(filter) {
-
-				var next = null;
+			
+			temp.each(function() {
 
 				keys.push({
 					index : counter,
-					key : $(filter).text()
+					key : $(this).text()
 				});
 
 				counter = counter + 1;
+			});
 
-				if (counter < length) {
-					
-					next = temp.eq(counter);
-
-					setTimeout(function() {
-						checkFilter(next);
-					}, 0);
-				}
-				else {
-					callback(keys);
-				}
-			}
-
-			if (length > 0) {
-				checkFilter(temp.eq(counter));
-			}
+			return keys;
 		}
 	};
 
