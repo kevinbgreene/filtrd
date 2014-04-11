@@ -1,10 +1,6 @@
-injekter.run(['eventHub', 'injekter.config', 'FiltrdTable', 'FiltrdMenu', 'filtrdRules', 'FiltrdStack', 'FiltrdPagination'], function(eventHub, config, FiltrdTable, FiltrdMenu, filtrdRules, FiltrdStack, FiltrdPagination) {
+injekter.run(['eventHub', 'FiltrdTable', 'FiltrdMenu', 'filtrdRules', 'FiltrdStack', 'FiltrdPagination'], function(eventHub, FiltrdTable, FiltrdMenu, filtrdRules, FiltrdStack, FiltrdPagination) {
 
 	'use strict';
-
-	// app configuration
-	config.set('category-name', 'Test');
-	config.set('rules-url', 'json/rules.js');
 
 	// rules that dictate how filters are displayed.
 	// right now we support priority and super filters.

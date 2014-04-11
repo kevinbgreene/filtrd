@@ -481,6 +481,16 @@
   	<script src="js/vendor/injekter/injekter.js"></script>
 
   	<script src="js/filtrd.0.0.1.js"></script>
+
+  	<script>
+
+  		// injector exposes a config object through a config method.
+  		// this allows you to set simple key value pairs that are injectible
+  		// anywhere in the application though with the injekter.config module.
+  		injekter.config('rule-set', 'Test');
+  		injekter.config('rules-url', 'json/rules.js');
+
+  	</script>
 	
 </body>
 

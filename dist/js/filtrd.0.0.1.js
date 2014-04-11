@@ -1,8 +1,5 @@
-injekter.run([ "eventHub", "injekter.config", "FiltrdTable", "FiltrdMenu", "filtrdRules", "FiltrdStack", "FiltrdPagination" ], function(eventHub, config, FiltrdTable, FiltrdMenu, filtrdRules, FiltrdStack, FiltrdPagination) {
+injekter.run([ "eventHub", "FiltrdTable", "FiltrdMenu", "filtrdRules", "FiltrdStack", "FiltrdPagination" ], function(eventHub, FiltrdTable, FiltrdMenu, filtrdRules, FiltrdStack, FiltrdPagination) {
     "use strict";
-    // app configuration
-    config.set("category-name", "Test");
-    config.set("rules-url", "json/rules.js");
     // rules that dictate how filters are displayed.
     // right now we support priority and super filters.
     // super filters are filters that must be selected for other filters
@@ -556,7 +553,7 @@ injekter.define("filtrdRules", [ "eventHub", "injekter.config", function(eventHu
                     url: config.get("rules-url"),
                     dataType: "json"
                 }).done(function(data) {
-                    rules = data[config.get("category-name")] || data["default"] || null;
+                    rules = data[config.get("rule-set")] || data["default"] || null;
                     deferred.resolve(rules);
                 }).fail(function(err) {
                     deferred.resolve(null);

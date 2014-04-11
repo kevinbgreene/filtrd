@@ -18,7 +18,7 @@ injekter.define('filtrdRules', ['eventHub', 'injekter.config', function(eventHub
 				})
 				.done(function(data) {
 					
-					rules = data[config.get('category-name')] || data['default'] || null;
+					rules = data[config.get('rule-set')] || data['default'] || null;
 					
 					deferred.resolve(rules);
 				})
