@@ -26,7 +26,9 @@ module.exports = function(grunt) {
 
             options: {
                 mangle: false,
-                beautify: true
+                beautify: true,
+                compress: false,
+                preserveComments: true
             },
 
             build: {
@@ -34,8 +36,6 @@ module.exports = function(grunt) {
                 files: {
 
                     'dist/js/filtrd.<%= pkg.version %>.js': [
-
-                        'dev/js/core/polyfills.js',
 
                         'dev/js/app.js',
 
