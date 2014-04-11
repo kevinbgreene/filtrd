@@ -64,8 +64,6 @@ injekter.run(['eventHub', 'injekter.config', 'FiltrdTable', 'FiltrdMenu', 'filtr
 			element : $('.filtrd-table')[0]
 		});
 
-		console.log('check');
-
 		return filterTable.getFiltersAndRows();
 	})
 

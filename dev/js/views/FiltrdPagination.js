@@ -4,8 +4,6 @@ injekter.define('FiltrdPagination', ['eventHub', function(eventHub) {
 
 	function FiltrdPagination(options) {
 
-		console.log('FiltrdPagination');
-
 		this.$el = $(options.element);
 		this.hasNext = false;
 		this.hasPrevious = false;

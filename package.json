@@ -1,6 +1,6 @@
 {
   "name": "filtrd",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Filter and sort table data",
   "main": "Gruntfile.js",
   "dependencies": {

@@ -3817,7 +3817,6 @@
     }
     function Injector() {
         function inject(arr, fn) {
-            console.log("inject: " + isReady), console.log("fn: ", fn);
             var mod;
             return isString(arr) && (arr = [ arr ]), mod = {
                 deps: arr,
@@ -3935,7 +3934,7 @@
             element: $(".filtrd-table")[0]
         }), filterPagination = new FiltrdPagination({
             element: $(".filtrd-table")[0]
-        }), console.log("check"), filterTable.getFiltersAndRows();
+        }), filterTable.getFiltersAndRows();
     }).then(function(obj) {
         var key = null;
         filters.push(obj.filters), rows.push(obj.rows), divideFiltersIntoCollections(filters);
@@ -4440,8 +4439,7 @@
             var i = 0, len = this.activeEntries.length, tempEntry = null;
             if (this.displayEntries = [], this.$header.off(), this.moreButton && (this.moreButton.off(), 
             this.moreButton.remove(), this.moreButton = null), this.activeEntries.length > this.showLimit) {
-                for (console.log("refreshButtonVisibility: ", this.activeEntries), this.hideAllButtons(), 
-                this.$header.on("click", this.toggle.bind(this)), i = 0; len > i; i++) tempEntry = this.activeEntries[i], 
+                for (this.hideAllButtons(), this.$header.on("click", this.toggle.bind(this)), i = 0; len > i; i++) tempEntry = this.activeEntries[i], 
                 this.displayEntries.length < this.showLimit && (this.displayEntries.push(tempEntry), 
                 tempEntry.show());
                 this.moreButton || this.isMobile || (this.moreButton = this.moreBtnTemplate(), this.$el.append(this.moreButton), 
@@ -4502,10 +4500,9 @@
 } ]), injekter.define("FiltrdPagination", [ "eventHub", function(eventHub) {
     "use strict";
     function FiltrdPagination(options) {
-        console.log("FiltrdPagination"), this.$el = $(options.element), this.hasNext = !1, 
-        this.hasPrevious = !1, this.$buttonBar = null, this.$nextButton = null, this.$prevButton = null, 
-        this.$filterInfo = null, this.pageLimit = 12, this.currentIndex = 0, this.currentPage = [], 
-        this.allRows = [], this.init.call(this);
+        this.$el = $(options.element), this.hasNext = !1, this.hasPrevious = !1, this.$buttonBar = null, 
+        this.$nextButton = null, this.$prevButton = null, this.$filterInfo = null, this.pageLimit = 12, 
+        this.currentIndex = 0, this.currentPage = [], this.allRows = [], this.init.call(this);
     }
     return FiltrdPagination.prototype = {
         constructor: FiltrdPagination,

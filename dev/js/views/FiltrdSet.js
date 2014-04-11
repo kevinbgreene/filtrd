@@ -349,8 +349,6 @@ injekter.define('FiltrdSet', ['eventHub', 'FiltrdButton', function(eventHub, Fil
 
 			if (this.activeEntries.length > this.showLimit) {
 
-				console.log('refreshButtonVisibility: ', this.activeEntries);
-
 				this.hideAllButtons();
 
 				this.$header.on('click', this.toggle.bind(this));
