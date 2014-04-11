@@ -733,15 +733,6 @@ injekter.define("FiltrdMenu", [ "eventHub", "FiltrdSet", function(eventHub, Filt
     return FiltrdMenu;
 } ]);
 
-/**
-
-field is an integer index of the field to sort on.
-fn is a function used to sort
-sort : function(field, fn) {
-
-}
-
-*/
 injekter.define("FiltrdTable", [ "eventHub", "FiltrdHeader", "FiltrdRow", function(eventHub, FiltrdHeader, FiltrdRow) {
     "use strict";
     function FiltrdTable(options) {

@@ -1,31 +1,3 @@
-/**
-
-addNewFilter(newFilter) {
-	
-	// addfilter
-
-	if (filtrRules) {
-		
-		// if is super flag as super
-		// if filter.key === super.key
-	}
-}
-
-applyFilter(appliedFilter) {
-	
-	if (filtrRules) {
-	
-	}
-}
-
-if rules.priority
-eventHub.emit('menu-sort' {
-	sortArray : rules.priority,
-	fn : function to sort with
-})
-
-*/
-
 injekter.define('filtrdManager', ['eventHub', 'FiltrdStack', function(eventHub, FiltrdStack) {
 
 	var instance = null;
