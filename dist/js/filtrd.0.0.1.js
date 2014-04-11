@@ -140,7 +140,7 @@ injekter.run([ "eventHub", "FiltrdTable", "FiltrdMenu", "filtrdRules", "FiltrdSt
             }
             // check if the current filter collection represents a super filter, if so
             // flag the filter and collection as being super filters.
-            if (filterRules && filterRules.super.indexOf(key) > -1) {
+            if (filterRules && filterRules.super && filterRules.super.indexOf(key) > -1) {
                 filter.isSuper = true;
                 filterCollections[key].isSuper = true;
             }
@@ -918,8 +918,6 @@ injekter.define("FiltrdRow", [ "eventHub", "FiltrdStack", function(eventHub, Fil
 		*/
         columns: [],
         init: function() {
-            var self = this;
-            eventHub.emit("row.added", this);
             eventHub.on([ "filter.applied", "filter.removed" ], this.handleFilterChange, this);
             return this;
         },

@@ -207,7 +207,10 @@ injekter.run(['eventHub', 'FiltrdTable', 'FiltrdMenu', 'filtrdRules', 'FiltrdSta
 
 			// check if the current filter collection represents a super filter, if so
 			// flag the filter and collection as being super filters.
-			if (filterRules && filterRules.super.indexOf(key) > -1) {
+			if (filterRules &&
+				filterRules.super &&
+				filterRules.super.indexOf(key) > -1) {
+				
 				filter.isSuper = true;
 				filterCollections[key].isSuper = true;
 			}

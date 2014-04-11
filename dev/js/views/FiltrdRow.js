@@ -67,9 +67,6 @@ injekter.define('FiltrdRow', ['eventHub', 'FiltrdStack', function(eventHub, Filt
 
 		init : function() {
 
-			var self = this;
-
-			eventHub.emit('row.added', this);
 			eventHub.on(['filter.applied', 'filter.removed'], this.handleFilterChange, this);
 
 			return this;
